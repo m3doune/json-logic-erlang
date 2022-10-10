@@ -1,14 +1,18 @@
 -module(operations).
 
--export([var/1]).
+-export([handle/2]).
 
-var({<<>>, Data}) ->
+handle(<<"var">>, {<<>>, Data}) ->
     Data;
-var({[_, Default], null}) ->
+handle(<<"var">>, {[_, Default], null}) ->
     Default;
-var({_, null}) ->
+handle(<<"var">>, {_, null}) ->
     null;
-var({Key_list, #{} = Data}) ->
+handle(<<"var">>, {Index, Data}) when is_integer(Index), is_list(Data), Index >= 0,Index < length(Data) ->
+    lists:nth(Index + 1, Data); %% 0 based indices
+handle(<<"var">>, {Index, _}) when is_integer(Index) ->
+    null; %% out of bounds / invalid index
+handle(<<"var">>, {Key_list, #{} = Data}) ->
    {Key, Default} = case Key_list of
         [Some_key, Some_default_value]  ->
             {Some_key, Some_default_value};
@@ -17,7 +21,22 @@ var({Key_list, #{} = Data}) ->
         Binary when is_binary(Binary) ->
             {Binary, null}
     end,
-    fetch_key_value(Key, Data, Default).
+    fetch_key_value(Key, Data, Default);
+handle(<<"missing">>, {Logic, #{} = Data}) when is_list(Logic)->
+    lists:filter(
+        fun(Key) -> false == maps:is_key(Key, Data) end,
+        Logic
+    );
+handle(<<"missing_some">>, {[N, Keys], #{} = Data}) ->
+    case handle(<<"missing">>, {Keys, Data}) of
+        Found when length(Found) > N -> [];
+        All -> All
+    end;
+handle(<<"==">>, {[A, A], _}) -> true;
+handle(<<"==">>, {[_, _], _}) -> false;
+handle(Unrecognised, _) ->
+    Error = lists:flatten(io_lib:fwrite("Unrecognized operation ~s", [binary_to_list(Unrecognised)])),
+    throw({error, Error}).
 
 fetch_key_value([], Last_found, _) ->
     Last_found;

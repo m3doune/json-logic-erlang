@@ -1,0 +1,1 @@
+-define(IS_LOGIC(Logic), map_size(Logic) =/= 0 andalso map_size(Logic) == 1).
