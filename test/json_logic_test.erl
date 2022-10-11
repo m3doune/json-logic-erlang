@@ -55,15 +55,7 @@ logical_operators_test() ->
     %% {"==" : [1, 1]}
     ?assertEqual(true, json_logic:apply("{\"==\" : [1, 1]}", null)),
     % {"==" : [1, "1"]}
-    ?assertEqual(true, json_logic:apply("{\"==\" : [1, \"1\"]}", null)).
-
-    % ?debugFmt("JSON Map ~p~n",[jiffy:decode("{
-    %     \"champ\" : {
-    %       \"name\" : \"Fezzig\",
-    %       \"height\" : 223
-    %     },
-    %     \"challenger\" : {
-    %       \"name\" : \"Dread Pirate Roberts\",
-    %       \"height\" : 183
-    %     }
-    %   }", [return_maps])]).
+    ?assertEqual(true, json_logic:apply("{\"==\" : [1, \"1\"]}", null)),
+    ?assert(json_logic:apply("{\"==\" : [0, false]}", null)),
+    ?assert(json_logic:apply("{\"===\" : [1, 1]}", null)),
+    ?assertNot(json_logic:apply("{\"===\" : [1, \"1\"]}", null)).

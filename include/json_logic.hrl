@@ -1,1 +1,3 @@
 -define(IS_LOGIC(Logic), map_size(Logic) =/= 0 andalso map_size(Logic) == 1).
+-define(TRUTHY(X) , (X =/= false andalso X =/= 0 andalso X =/= [] andalso X =/= null)).
+-define(FALSY(X), ?TRUTHY(X) == false).

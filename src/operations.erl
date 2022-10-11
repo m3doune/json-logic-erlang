@@ -2,6 +2,8 @@
 
 -export([handle/2]).
 
+-include("../include/json_logic.hrl").
+
 handle(<<"var">>, {<<>>, Data}) ->
     Data;
 handle(<<"var">>, {[_, Default], null}) ->
@@ -32,8 +34,12 @@ handle(<<"missing_some">>, {[N, Keys], #{} = Data}) ->
         Found when length(Found) > N -> [];
         All -> All
     end;
-handle(<<"==">>, {[A, A], _}) -> true;
-handle(<<"==">>, {[_, _], _}) -> false;
+handle(<<"==">>, {[A, A], _}) ->
+    true;
+handle(<<"==">>, {[A, B], _}) ->
+    {Op1, Op2} = cast(A, B),
+    Op1 == Op2;
+handle(<<"===">>, {[A, B], _}) -> A =:= B;
 handle(Unrecognised, _) ->
     Error = lists:flatten(io_lib:fwrite("Unrecognized operation ~s", [binary_to_list(Unrecognised)])),
     throw({error, Error}).
@@ -44,3 +50,19 @@ fetch_key_value(<<Char,_/binary>>= Key, Data, Default) when is_integer(Char) ->
     fetch_key_value(binary:split(Key, <<".">>), Data, Default);
 fetch_key_value([Key | Keys], Data, Default) ->
     fetch_key_value(Keys, maps:get(Key, Data, Default), Default).
+
+cast(Op1, Op2) when is_number(Op1) andalso is_binary(Op2) ->
+    {Op1, binary_to_number(Op2)};
+cast(Op1, Op2) when is_binary(Op1) andalso is_number(Op2) ->
+    {binary_to_number(Op1), Op2};
+cast(Op1, Op2) ->
+    case {?FALSY(Op1), ?FALSY(Op2)} of
+        {true, true} -> {Op1, Op1};
+        _ -> {Op1, Op2}
+    end.
+
+binary_to_number(Bin) ->
+    try binary_to_float(Bin)
+    catch
+        error:badarg -> binary_to_integer(Bin)
+    end.

@@ -23,7 +23,4 @@ apply(Privitive_value, _) ->
     Privitive_value.
 
 -spec truthy(Arg :: any()) -> boolean().
-truthy(0) -> false;
-truthy([]) -> false;
-truthy(null) -> false;
-truthy(_) -> true.
+truthy(Arg) -> ?TRUTHY(Arg).
